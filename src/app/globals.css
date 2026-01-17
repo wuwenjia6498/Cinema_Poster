@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局样式重置和基础设置 */
+:root {
+  /* 品牌主色 - 红色系 */
+  --brand-red: #E74C3C;
+  --brand-red-dark: #C0392B;
+  
+  /* 文字颜色 */
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  
+  /* 背景颜色 */
+  --bg-light: #F9F9F9;
+  --bg-white: #FFFFFF;
+}
+
+/* 全局字体设置 - 优先使用系统中文字体 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, 
+    Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 推荐语使用衬线字体 */
+.font-quote {
+  font-family: 'Georgia', 'Noto Serif SC', 'Source Han Serif SC', 
+    'SimSun', serif;
+}
+
+/* 海报预览区域的特殊样式 */
+.poster-container {
+  /* 保证海报导出时的清晰度 */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* 标签胶囊样式的动画效果 */
+.tag-pill {
+  transition: all 0.2s ease;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
