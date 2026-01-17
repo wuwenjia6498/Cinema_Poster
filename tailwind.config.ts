@@ -15,5 +15,12 @@ const config: Config = {
     },
   },
   plugins: [],
+  // 禁用 oklch 颜色格式，确保 html2canvas 兼容性
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
+  corePlugins: {
+    // 不使用现代颜色函数
+  },
 }
 export default config

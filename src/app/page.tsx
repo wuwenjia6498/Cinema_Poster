@@ -19,6 +19,9 @@ export default function HomePage() {
   // AI 分析加载状态
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   
+  // 分享文案状态
+  const [shareText, setShareText] = useState('')
+  
   // 海报 DOM 引用，用于导出图片
   const posterRef = useRef<HTMLDivElement>(null)
 
@@ -35,24 +38,79 @@ export default function HomePage() {
    * 调用后端 API 获取视频信息和 AI 生成的文案
    */
   const handleAnalyze = async () => {
-    if (!posterData.videoUrl) return
+    if (!posterData.videoUrl) {
+      alert('请先输入视频链接')
+      return
+    }
     
     setIsAnalyzing(true)
     try {
-      // TODO: Step 2 中实现 API 调用
-      // const response = await fetch('/api/analyze', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ url: posterData.videoUrl }),
-      // })
-      // const result = await response.json()
-      // handleDataChange(result)
+      console.log('开始分析视频:', posterData.videoUrl)
       
-      // 模拟 API 延迟
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      alert('AI 分析功能将在 Step 2 中实现')
+      // 调用 API 分析视频
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: posterData.videoUrl }),
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || '分析失败')
+      }
+      
+      console.log('AI 分析结果:', result.data)
+      
+      // 更新海报数据
+      const newData = {
+        title: result.data.title,
+        tags: result.data.tags,
+        description: result.data.description,
+        recommendation: result.data.recommendation,
+      }
+      handleDataChange(newData)
+      
+      // 自动生成分享文案
+      console.log('开始生成分享文案...')
+      try {
+        const shareResponse = await fetch('/api/generate-share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: result.data.title,
+            description: result.data.description,
+            tags: result.data.tags,
+          }),
+        })
+        
+        const shareResult = await shareResponse.json()
+        
+        if (shareResponse.ok && shareResult.success) {
+          console.log('API 返回的分享文案:', shareResult.shareText)
+          console.log('分享文案长度:', shareResult.shareText.length)
+          
+          // 组装最终分享文案
+          const finalShareText = `🎬 ${result.data.title}
+
+${shareResult.shareText}
+
+🏷️ ${result.data.tags.join(' · ')}
+
+—— 来自老约翰「周末放映室」精选推荐`
+          
+          console.log('准备设置分享文案:', finalShareText.substring(0, 50) + '...')
+          setShareText(finalShareText)
+          console.log('分享文案已设置到 state，完整长度:', finalShareText.length)
+        }
+      } catch (shareError) {
+        console.error('分享文案生成失败:', shareError)
+        // 分享文案生成失败不影响主流程
+      }
+      
     } catch (error) {
       console.error('分析失败:', error)
+      alert(`分析失败：${error instanceof Error ? error.message : '请检查网络连接'}`)
     } finally {
       setIsAnalyzing(false)
     }
@@ -60,31 +118,44 @@ export default function HomePage() {
 
   /**
    * 下载海报处理函数
-   * 使用 html2canvas 将海报导出为高清 PNG
+   * 使用 modern-screenshot 将海报导出为高清 PNG
    */
   const handleDownload = async () => {
-    if (!posterRef.current) return
+    if (!posterRef.current) {
+      alert('海报未加载完成，请稍后重试')
+      return
+    }
     
     try {
-      // 动态导入 html2canvas
-      const html2canvas = (await import('html2canvas')).default
+      console.log('开始生成海报图片...')
+      
+      // 动态导入 modern-screenshot
+      const { domToPng } = await import('modern-screenshot')
       
       // 生成高清图片 (3x 缩放)
-      const canvas = await html2canvas(posterRef.current, {
+      const dataUrl = await domToPng(posterRef.current, {
         scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
+        quality: 1.0,
+        backgroundColor: '#F9F9F9',
+        style: {
+          // 确保字体正确渲染
+          fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',
+        },
       })
+      
+      console.log('图片生成成功，准备下载...')
       
       // 创建下载链接
       const link = document.createElement('a')
-      link.download = `${posterData.title || '海报'}_周末放映室.png`
-      link.href = canvas.toDataURL('image/png')
+      const fileName = `${posterData.title || '海报'}_周末放映室.png`
+      link.download = fileName
+      link.href = dataUrl
       link.click()
+      
+      console.log('下载已触发:', fileName)
     } catch (error) {
       console.error('下载失败:', error)
-      alert('下载失败，请重试')
+      alert(`下载失败：${error instanceof Error ? error.message : '未知错误'}，请重试`)
     }
   }
 
@@ -114,6 +185,7 @@ export default function HomePage() {
               onAnalyze={handleAnalyze}
               onDownload={handleDownload}
               isAnalyzing={isAnalyzing}
+              autoGeneratedShareText={shareText}
             />
           </div>
 

@@ -14,24 +14,17 @@ interface PosterPreviewProps {
 
 /**
  * 品牌 Logo 组件
- * 红色圆形背景 + 白色中心图案
+ * 使用自定义 Logo 图片
  */
 const BrandLogo: React.FC = () => (
-  <svg 
-    width="40" 
-    height="40" 
-    viewBox="0 0 40 40" 
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg"
-    className="flex-shrink-0"
-  >
-    {/* 红色圆形背景 */}
-    <circle cx="20" cy="20" r="20" fill="#E74C3C" />
-    {/* 内部白色圆环 */}
-    <circle cx="20" cy="20" r="14" stroke="white" strokeWidth="2" fill="none" />
-    {/* 中心播放图标 */}
-    <polygon points="17,13 17,27 28,20" fill="white" />
-  </svg>
+  <img 
+    src="/logo-1.jpg" 
+    alt="周末放映室"
+    width={36}
+    height={36}
+    className="flex-shrink-0 rounded-full object-cover"
+    style={{ width: '36px', height: '36px' }}
+  />
 )
 
 /**
@@ -48,13 +41,17 @@ const PosterPreview: React.FC<PosterPreviewProps> = ({ data, posterRef }) => {
   return (
     <div 
       ref={posterRef}
-      className="poster-container w-[375px] bg-white shadow-2xl overflow-hidden"
-      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif' }}
+      className="poster-container w-[375px] overflow-hidden"
+      style={{ 
+        fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',
+        backgroundColor: '#ffffff',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+      }}
     >
       {/* ========== 1. Header: 封面图区域 ========== */}
       <div className="relative">
         {/* 封面图 - 保持 16:9 比例 */}
-        <div className="w-full aspect-[4/3] bg-gradient-to-b from-slate-800 to-slate-900 overflow-hidden">
+        <div className="w-full aspect-[4/3] overflow-hidden" style={{ background: 'linear-gradient(to bottom, #1e293b, #0f172a)' }}>
           {data.coverImage && data.coverImage !== '/mock-cover.jpg' ? (
             // 用户上传的真实图片
             <img 
@@ -96,20 +93,20 @@ const PosterPreview: React.FC<PosterPreviewProps> = ({ data, posterRef }) => {
               {/* 底部人物剪影提示 */}
               <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-6 items-end">
                 {/* 人物剪影 */}
-                <div className="w-10 h-16 bg-slate-700/50 rounded-t-full"></div>
-                <div className="w-8 h-12 bg-slate-700/50 rounded-t-full"></div>
-                <div className="w-10 h-20 bg-slate-700/50 rounded-t-full"></div>
+                <div className="w-10 h-16 rounded-t-full" style={{ backgroundColor: 'rgba(51, 65, 85, 0.5)' }}></div>
+                <div className="w-8 h-12 rounded-t-full" style={{ backgroundColor: 'rgba(51, 65, 85, 0.5)' }}></div>
+                <div className="w-10 h-20 rounded-t-full" style={{ backgroundColor: 'rgba(51, 65, 85, 0.5)' }}></div>
               </div>
             </div>
           )}
         </div>
 
         {/* 悬浮标签 - 绝对定位在图片左下角 */}
-        <div className="absolute bottom-4 left-4 flex flex-wrap gap-2">
+        <div className="absolute bottom-3 left-4 flex flex-wrap gap-1.5">
           {data.tags.map((tag, index) => (
             <span 
               key={index}
-              className="tag-pill px-3 py-1.5 text-xs text-white bg-black/60 backdrop-blur-sm rounded-full"
+              className="tag-pill px-2.5 py-1 text-[11px] text-white bg-black/60 backdrop-blur-sm rounded-full"
             >
               {tag}
             </span>
@@ -118,33 +115,34 @@ const PosterPreview: React.FC<PosterPreviewProps> = ({ data, posterRef }) => {
       </div>
 
       {/* ========== 2. Title Bar: 标题区域 ========== */}
-      <div className="bg-[#1a1a1a] px-5 py-4">
-        <h1 className="text-white text-2xl font-bold tracking-wide">
+      <div className="bg-[#1a1a1a] px-6 py-4">
+        <h1 className="text-white text-xl font-bold tracking-wide">
           {data.title}
         </h1>
       </div>
 
       {/* ========== 3. Content Body: 正文区域 ========== */}
-      <div className="bg-[#F9F9F9] px-5 py-5">
+      <div className="bg-[#F9F9F9] px-6 py-6">
         {/* 视频介绍标题 */}
-        <h2 className="text-sm text-gray-500 mb-3 tracking-wider">
+        <h2 className="text-[10px] mb-2 tracking-wider" style={{ color: '#6b7280' }}>
           视频介绍
         </h2>
         
         {/* 剧情简介 */}
-        <p className="text-gray-700 text-[15px] leading-relaxed mb-6">
+        <p className="text-[12px] leading-loose mb-6" style={{ color: '#374151' }}>
           {data.description}
         </p>
 
         {/* 推荐理由区块 */}
         <div className="bg-white rounded-lg p-4 border-l-4 border-[#3B5998]">
           {/* 推荐理由标题 */}
-          <h3 className="text-xs text-gray-400 mb-2 tracking-wider">
+          <h3 className="text-[10px] mb-2 tracking-wider" style={{ color: '#9ca3af' }}>
             推荐理由
           </h3>
           {/* 推荐语内容 - 使用衬线字体 */}
           <p 
-            className="font-quote text-gray-800 text-[15px] leading-loose italic"
+            className="font-quote text-[13px] leading-loose italic"
+            style={{ color: '#1f2937' }}
           >
             {data.recommendation}
           </p>
@@ -152,23 +150,23 @@ const PosterPreview: React.FC<PosterPreviewProps> = ({ data, posterRef }) => {
       </div>
 
       {/* ========== 4. Footer: 品牌区域 ========== */}
-      <div className="bg-white px-5 py-4">
+      <div className="bg-[#F9F9F9] px-6 py-5">
         {/* 分隔线 */}
-        <div className="border-t border-gray-200 mb-4"></div>
+        <div className="border-t mb-4" style={{ borderColor: '#d1d5db' }}></div>
         
         {/* 品牌信息与二维码 */}
         <div className="flex items-center justify-between">
           {/* 左侧：品牌信息 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {/* Logo */}
             <BrandLogo />
             
             {/* 品牌文字 */}
             <div>
-              <h4 className="text-[#3B5998] font-bold text-base">
+              <h4 className="font-bold text-sm" style={{ color: '#3B5998' }}>
                 {data.brandName}
               </h4>
-              <p className="text-gray-400 text-xs mt-0.5">
+              <p className="text-[10px] mt-0.5" style={{ color: '#9ca3af' }}>
                 精选优质儿童动画短片
               </p>
             </div>
@@ -178,7 +176,7 @@ const PosterPreview: React.FC<PosterPreviewProps> = ({ data, posterRef }) => {
           <div className="flex-shrink-0">
             <QRCodeSVG 
               value={data.qrCodeUrl || data.videoUrl}
-              size={64}
+              size={56}
               level="M"
               includeMargin={false}
               fgColor="#3B5998"
