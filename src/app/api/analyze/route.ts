@@ -23,40 +23,111 @@ interface GeneratedPosterData {
  * 构建 Gemini API 请求的 Prompt
  */
 function buildPrompt(url: string, pageTitle?: string, pageDescription?: string): string {
-  return `为动画短片生成推荐文案（JSON格式）。
+  // 构建视频信息部分
+  const videoInfo = pageTitle 
+    ? `【视频标题】${pageTitle}
+${pageDescription ? `【视频简介】${pageDescription}` : ''}`
+    : `【视频链接】${url}
+请根据链接中的关键词推断视频内容。`
 
-${pageTitle ? `标题：${pageTitle}` : ''}
-${pageDescription ? `简介：${pageDescription}` : ''}
+  return `你是一位专业的儿童动画推荐官。请为以下动画短片生成推荐文案。
 
-要求：
-1. **title**: 中文标题，外文作品附原名，如"鹬 (Piper)"
+${videoInfo}
 
-2. **tags**: 2-3个标签
-   - 类型：国外动画短片、皮克斯、迪士尼、吉卜力、独立艺术短片等
-   - 荣誉：奥斯卡获奖、国际获奖等
-   - 主题：成长、友情、勇气等
+## 输出要求（严格遵守）：
 
-3. **description** (80字内): 精炼概括核心冲突/亮点，不流水账
+### 1. title（标题）
+- 中文名称，外文作品附原名
+- 格式示例：「父与女 (Father and Daughter)」「鹬 (Piper)」
 
-4. **recommendation** (60字内): 从艺术风格、情感共鸣、适合年龄三个维度分析。自然口语化，禁用"教育意义"、"培养能力"、"懂得道理"等说教词汇
+### 2. tags（2-3个标签）
+从以下类型中选择：
+- 地区/制作：国外动画短片、国内动画短片、皮克斯、迪士尼、吉卜力、独立艺术短片
+- 荣誉：奥斯卡获奖、奥斯卡提名、国际获奖
+- 主题：成长、友情、亲情、勇气、生命
 
-示例：
+### 3. description（视频介绍，80字内）
+- 精炼概括故事的核心冲突或情感亮点
+- 不要流水账叙述，抓住最打动人的点
+- 用画面感强的语言
+
+### 4. recommendation（推荐理由，60字内）
+必须包含三个维度：
+- 🎨 艺术风格：画风、色彩、音乐特点
+- 💖 情感价值：能引发什么情感共鸣（禁用"教育意义""培养能力""懂得道理"等说教词）
+- 👶 适合年龄：几岁孩子可以看懂
+
+## 输出格式（仅返回JSON）：
+
 {
-  "title": "鹬 (Piper)",
-  "tags": ["国外动画短片", "皮克斯", "奥斯卡获奖"],
-  "description": "小海鸟怕水却要学觅食。海浪一次次打来，它从躲避到观察螃蟹，发现了水下的奇妙世界。",
-  "recommendation": "画面像珠宝般精致，每一帧都是壁纸。小鸟从害怕到好奇的转变，3岁孩子都能看懂。6分钟，不需要对白。"
+  "title": "父与女 (Father and Daughter)",
+  "tags": ["国外动画短片", "奥斯卡获奖", "亲情"],
+  "description": "父亲划船离去，女儿在岸边等待。从小女孩到白发老人，她骑着单车一次次来到海边。时间改变了一切，唯有思念从未停止。",
+  "recommendation": "极简线条勾勒出一生的等待，配乐温柔得让人心碎。无需对白，3岁孩子就能感受到那份想念。8分钟的生命诗篇。"
 }
 
-返回JSON：`
+请直接返回JSON，不要有其他文字：`
+}
+
+/**
+ * 从 B站 URL 中提取 BV 号
+ */
+function extractBVID(url: string): string | null {
+  const bvMatch = url.match(/BV[\w]+/)
+  return bvMatch ? bvMatch[0] : null
+}
+
+/**
+ * 通过 B站 API 获取视频信息
+ */
+async function fetchBilibiliVideoInfo(bvid: string): Promise<{ title?: string; description?: string }> {
+  try {
+    const apiUrl = `https://api.bilibili.com/x/web-interface/view?bvid=${bvid}`
+    const response = await fetch(apiUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://www.bilibili.com',
+      },
+    })
+    
+    if (!response.ok) {
+      console.log('B站 API 请求失败:', response.status)
+      return {}
+    }
+    
+    const data = await response.json()
+    
+    if (data.code === 0 && data.data) {
+      console.log('B站视频信息获取成功:', data.data.title)
+      return {
+        title: data.data.title,
+        description: data.data.desc || data.data.dynamic || '',
+      }
+    }
+    
+    return {}
+  } catch (error) {
+    console.log('B站 API 调用失败:', error)
+    return {}
+  }
 }
 
 /**
  * 尝试从 URL 获取网页元信息
  */
 async function fetchPageMeta(url: string): Promise<{ title?: string; description?: string }> {
+  // 优先尝试 B站 API
+  const bvid = extractBVID(url)
+  if (bvid) {
+    console.log('检测到 B站视频，BV号:', bvid)
+    const biliInfo = await fetchBilibiliVideoInfo(bvid)
+    if (biliInfo.title) {
+      return biliInfo
+    }
+  }
+  
+  // 其他平台尝试直接抓取
   try {
-    // 设置超时
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000)
     
@@ -75,11 +146,9 @@ async function fetchPageMeta(url: string): Promise<{ title?: string; description
     
     const html = await response.text()
     
-    // 提取 title
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
     const title = titleMatch ? titleMatch[1].trim() : undefined
     
-    // 提取 meta description
     const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i)
     const description = descMatch ? descMatch[1].trim() : undefined
     
@@ -112,7 +181,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
       messages: [
         {
           role: 'system',
-          content: '你是内容推荐专家。文案自然口语化，禁用说教词汇。返回JSON格式。'
+          content: '你是专业的儿童动画推荐官，熟悉全球优质动画短片。你的文案温暖有感染力，从不说教。严格按要求返回JSON格式。'
         },
         {
           role: 'user',
