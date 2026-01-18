@@ -1,1 +1,0 @@
-self.__REACT_LOADABLE_MANIFEST="{\"app\\\\page.tsx -> modern-screenshot\":{\"id\":\"app\\\\page.tsx -> modern-screenshot\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_modern-screenshot_dist_index_mjs.js\"]}}"
