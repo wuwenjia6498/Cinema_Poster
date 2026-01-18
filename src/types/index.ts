@@ -14,6 +14,17 @@ export interface PosterData {
 }
 
 /**
+ * 历史记录接口定义
+ * 用于存储生成过的海报记录
+ */
+export interface HistoryRecord {
+  id: string;             // 唯一标识符
+  timestamp: number;      // 创建时间戳
+  data: PosterData;       // 海报数据
+  shareText?: string;     // 分享文案（可选）
+}
+
+/**
  * 海报默认/模拟数据
  * 用于开发阶段的静态展示
  */
