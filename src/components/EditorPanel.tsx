@@ -276,10 +276,9 @@ ${result.shareText}
         onClick={generateShareText}
         disabled={!data.title || !data.description || isGenerating}
         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 
-                   bg-gradient-to-r from-purple-500 to-pink-500 text-white 
-                   rounded-lg font-medium text-sm shadow-md
-                   hover:shadow-lg hover:-translate-y-0.5
-                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0
+                   bg-gray-200 text-gray-700 rounded-xl font-medium text-sm
+                   hover:bg-gray-300 active:scale-[0.98]
+                   disabled:opacity-40 disabled:cursor-not-allowed
                    transition-all duration-200"
       >
         <Share2 size={16} />
@@ -443,11 +442,11 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           onClick={onAnalyze}
           disabled={isAnalyzing || !data.videoUrl}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 
-                     bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
-                     rounded-lg font-medium text-sm shadow-lg shadow-blue-500/25
-                     hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5
-                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0
-                     transition-all duration-200"
+                     text-white rounded-xl font-medium text-sm
+                     hover:opacity-90 active:scale-[0.98]
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     transition-all duration-200 shadow-sm"
+          style={{ backgroundColor: '#2d4a78' }}
         >
           <Sparkles size={18} />
           {isAnalyzing ? '正在分析中...' : 'AI 智能分析'}
@@ -545,8 +544,10 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
         <button
           onClick={onDownload}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 
-                     bg-gray-900 text-white rounded-lg font-medium text-sm
-                     hover:bg-gray-800 transition-colors duration-200"
+                     text-white rounded-xl font-medium text-sm
+                     hover:opacity-90 active:scale-[0.98]
+                     transition-all duration-200"
+          style={{ backgroundColor: '#2d4a78' }}
         >
           <Download size={18} />
           下载海报
