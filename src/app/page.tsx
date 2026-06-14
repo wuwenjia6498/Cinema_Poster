@@ -174,14 +174,14 @@ export default function HomePage() {
           console.log('API 返回的分享文案:', shareResult.shareText)
           console.log('分享文案长度:', shareResult.shareText.length)
           
-          // 组装最终分享文案
-          finalShareText = `🎬 ${result.data.title}
+          // 组装最终分享文案（格式：固定开场白 → 🎬片名 → 🏷️标签 → 正文）
+          finalShareText = `各位大朋友、小朋友们，大家晚上好。欢迎大家来到【老约翰周末放映室】。
 
-${shareResult.shareText}
+🎬 ${result.data.title}
 
-🏷️ ${result.data.tags.join(' · ')}
+🏷️ ${result.data.tags.join('，')}
 
-—— 来自老约翰「周末放映室」精选推荐`
+${shareResult.shareText}`
           
           console.log('准备设置分享文案:', finalShareText.substring(0, 50) + '...')
           setShareText(finalShareText)

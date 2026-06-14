@@ -11,26 +11,31 @@ const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || 'https://generativelangua
 
 /**
  * 构建分享文案生成 Prompt
+ * 注意：AI 只输出正文主体（问题开头 + 推荐内容），
+ * 开场白、片名、标签由前端模板负责拼接
  */
 function buildSharePrompt(title: string, description: string, tags: string[]): string {
-  return `为动画短片《${title}》写一段微信群分享文案。
+  return `为动画短片《${title}》写一段微信群推荐正文。
 
 【剧情简介】${description}
 【标签】${tags.join('、')}
 
 ## 写作要求：
-1. 字数：80-100字
-2. 开头：用一个引发共鸣的小问题或悬念开头，吸引家长点击
-3. 语气：轻松口语化，像和闺蜜/好友聊天推荐
+1. 字数：50-70字，简短精炼，必须写完整
+2. 开头：用一个引发共鸣的小问题或有趣悬念开头，吸引家长点击
+3. 语气：轻松口语化，像和好友聊天推荐
 4. 禁止：不要用"教育意义""培养能力""让孩子懂得"等说教词汇
-5. 包含：提及画面/音乐特色
-6. 观看门槛：用委婉方式表达，如"不需要对白""全家都能看""大人孩子都会喜欢"，避免写具体年龄如"3岁""5岁"
-7. 结尾：自然收尾，可以号召一起看
+5. 提一个亮点即可（画面或音乐其一），不要面面俱到
+6. 观看门槛用委婉方式表达（如"不需要对白""全家都能看"），避免写具体年龄
 
-## 参考范例：
-"你家孩子怕黑吗？这部8分钟的奥斯卡短片太治愈了！小男孩跟着爸爸和爷爷去月亮上扫星星，画风梦幻得像在看一幅会动的油画。没有对白，小朋友也能看懂，但大人看完可能比孩子还感动。这周末找个安静的晚上，全家一起窝在沙发上看吧～"
+## 注意：
+- 只输出推荐正文本身，不要包含片名、标签、开场白或任何前缀
+- 正文必须是完整的一段话，有头有尾，不超过70字
 
-## 直接输出文案（不要有任何前缀说明）：`
+## 参考范例（输出格式示例，约60字）：
+在玩具眼里，咱家娃是啥样？这部皮克斯奥斯卡短片就演给你看：崭新小锡兵遇上口水横流的"巨型"宝宝，又好笑又真实，配乐还特别逗。
+
+## 直接输出推荐正文（不要有任何前缀）：`
 }
 
 /**
@@ -59,7 +64,9 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         }
       ],
       temperature: 0.7,
-      max_tokens: 2048,
+      // gemini-2.5 系列为思考型模型，思考过程与正文共用 token 预算，
+      // 需留足空间（思考 + 120字正文），否则会在 finish_reason=length 处截断
+      max_tokens: 4096,
       stop: null, // 不设置停止词，让模型自然结束
     })
   })
@@ -81,15 +88,23 @@ async function callGeminiAPI(prompt: string): Promise<string> {
     throw new Error('Gemini API 返回内容为空')
   }
   
-  // 检查是否因为 token 限制被截断
+  const fullText = generatedText.trim()
+  console.log('API finish_reason:', finishReason, '| 文案长度:', fullText.length)
+  console.log('生成的文案:', fullText)
+  
+  // 检查是否因 token 限制被截断，截断时直接报错让前端提示重试
   if (finishReason === 'length') {
-    console.warn('警告：文案可能因 token 限制被截断')
+    console.error('文案被截断（finish_reason=length），当前内容:', fullText)
+    throw new Error('文案生成不完整，请点击重新生成')
   }
   
-  // 确保返回完整内容，不截断
-  const fullText = generatedText.trim()
-  console.log('生成的完整文案长度:', fullText.length)
-  console.log('生成的完整文案:', fullText)
+  // 检查文案是否以完整句子结尾（应以句号、感叹号、波浪号等结束）
+  const lastChar = fullText.slice(-1)
+  const validEndings = ['。', '！', '～', '~', '吧', '呢', '啊', '哦', '咯', '嗯', '！', '.', '!']
+  if (fullText.length > 0 && !validEndings.includes(lastChar)) {
+    console.warn('文案可能不完整，末尾字符:', lastChar, '| 内容:', fullText)
+    throw new Error('文案生成不完整，请点击重新生成')
+  }
   
   return fullText
 }
